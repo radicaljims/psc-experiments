@@ -2,46 +2,52 @@ module Main where
 
 import Prelude
 
-import Data.Int (toNumber)
 import Data.Maybe (fromJust)
-import Data.Array ((..))
-import Data.Monoid (mempty)
-import Data.Foldable (fold)
+import Data.Traversable (for)
+import Data.List (range, List)
 
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Random (randomRange, RANDOM, randomInt)
 
-import Graphics.Drawing (scale, translate, shadowBlur, black, shadowColor,
-                         shadow, render, rotate, closed, fillColor, filled)
+import Graphics.Drawing (Drawing, circle, fillColor, filled, render)
 import Graphics.Canvas (CANVAS, getCanvasElementById, getContext2D)
 import Partial.Unsafe (unsafePartial)
 
-import Math (sin, cos, pi)
+import Color (xyz)
 
-import Color.Scale (sample)
-import Color.Scale.Perceptual (magma)
+type Point = { x :: Number, y :: Number }
 
-main :: Eff (canvas :: CANVAS) Unit
+random_point :: forall e1. Number -> Number -> Eff (random :: RANDOM | e1) Point
+random_point x_max y_max =
+  do
+    x <- randomRange 0.0 x_max
+    y <- randomRange 0.0 y_max
+
+    pure { x: x, y: y }
+
+random_points :: forall e1. Int -> Int -> Number -> Number -> Eff (random :: RANDOM | e1) (List Point)
+random_points lower upper min max =
+  do
+    n <- randomInt lower upper
+    for (range 0 n) \_ -> do
+      random_point min max
+
+make_circle :: Point -> Drawing
+make_circle p =
+  filled (fillColor (xyz 0.8 0.3 1.0)) (circle p.x p.y 5.0)
+
+make_circles :: List Point -> List Drawing
+make_circles = map make_circle
+
+main :: Eff (canvas :: CANVAS, random :: RANDOM) (List Unit)
 main = do
   mcanvas <- getCanvasElementById "canvas"
+
   let canvas = unsafePartial (fromJust mcanvas)
   ctx <- getContext2D canvas
 
-  render ctx $
-    shadow (shadowColor black <> shadowBlur 10.0) $
-      translate 400.0 400.0 $
-        scale 200.0 200.0 $
-          go 6
-  where
-  s = 0.375
+  -- TODO: look into the Aff monad for timers?
 
-  go 0 = mempty
-  go n =
-    let dr = scale s s (go (n - 1))
-    in filled (fillColor (sample magma (1.0 - toNumber (n - 1) / 5.0))) (closed pentagon)
-       <> fold do i <- 0..4
-                  pure (rotate (pi / 2.5 * (toNumber i + 0.5)) (translate 0.0 (cos (pi / 5.0) * (1.0 + s)) dr))
-
-  pentagon = do
-    i <- 0..5
-    let theta = pi / 2.5 * toNumber i
-    pure { x: sin theta, y: cos theta }
+  points <- random_points 5 25 800.0 800.0
+  for (make_circles points) \c -> do
+    render ctx c
