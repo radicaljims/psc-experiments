@@ -4,7 +4,8 @@ import Prelude
 
 import Data.Maybe (fromJust)
 import Data.Traversable (for)
-import Data.List (range, List)
+import Data.List (List)
+import Data.Unfoldable (replicateA)
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Random (randomRange, RANDOM, randomInt)
@@ -29,8 +30,7 @@ randomPoints :: forall e1. Int -> Int -> Number -> Number -> Eff (random :: RAND
 randomPoints lower upper min max =
   do
     n <- randomInt lower upper
-    for (range 0 n) \_ -> do
-      randomPoint min max
+    replicateA n (randomPoint min max)
 
 makeCircle :: Point -> Drawing
 makeCircle p =
