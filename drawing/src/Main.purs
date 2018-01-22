@@ -17,27 +17,27 @@ import Color (xyz)
 
 type Point = { x :: Number, y :: Number }
 
-random_point :: forall e1. Number -> Number -> Eff (random :: RANDOM | e1) Point
-random_point x_max y_max =
+randomPoint :: forall e1. Number -> Number -> Eff (random :: RANDOM | e1) Point
+randomPoint x_max y_max =
   do
     x <- randomRange 0.0 x_max
     y <- randomRange 0.0 y_max
 
     pure { x: x, y: y }
 
-random_points :: forall e1. Int -> Int -> Number -> Number -> Eff (random :: RANDOM | e1) (List Point)
-random_points lower upper min max =
+randomPoints :: forall e1. Int -> Int -> Number -> Number -> Eff (random :: RANDOM | e1) (List Point)
+randomPoints lower upper min max =
   do
     n <- randomInt lower upper
     for (range 0 n) \_ -> do
-      random_point min max
+      randomPoint min max
 
-make_circle :: Point -> Drawing
-make_circle p =
+makeCircle :: Point -> Drawing
+makeCircle p =
   filled (fillColor (xyz 0.8 0.3 1.0)) (circle p.x p.y 5.0)
 
-make_circles :: List Point -> List Drawing
-make_circles = map make_circle
+makeCircles :: List Point -> List Drawing
+makeCircles = map makeCircle
 
 main :: Eff (canvas :: CANVAS, random :: RANDOM) (List Unit)
 main = do
@@ -48,6 +48,6 @@ main = do
 
   -- TODO: look into the Aff monad for timers?
 
-  points <- random_points 5 25 800.0 800.0
-  for (make_circles points) \c -> do
+  points <- randomPoints 5 25 800.0 800.0
+  for (makeCircles points) \c -> do
     render ctx c
