@@ -2,9 +2,9 @@
 
 ### Dependencies
 
-1. `purescript` (I currently seem to be using `0.11.5`)
-2. `pulp`
-3. `bower`
+* `purescript` (I currently seem to be using `0.11.5`)
+* `pulp`
+* `bower`
 
 I forget how I usually install PureScript, I think I build from source?
 
